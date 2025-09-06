@@ -1,0 +1,7 @@
+# Copy this content to .env.local file
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://pbbonvjrcvwqywbomdry.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYm9udmpyY3Z3cXl3Ym9tZHJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5NDc5MDEsImV4cCI6MjA3MjUyMzkwMX0.SebonZhAJ8iMtmeeIn4Qel0mKXWtRzKhe7DVOMw1uwE
+
+# OpenAI Configuration (REQUIRED for transcription)
+OPENAI_API_KEY=your_openai_api_key_here
