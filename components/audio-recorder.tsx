@@ -103,7 +103,7 @@ export default function AudioRecorder({ onRecordingComplete, disabled = false }:
               Microphone Access Required
             </h3>
             <div className="mt-2 text-sm text-red-700">
-              <p>Please allow microphone access to record audio. Click the microphone icon in your browser's address bar and select "Allow".</p>
+              <p>Please allow microphone access to record audio. Click the microphone icon in your browser&apos;s address bar and select &quot;Allow&quot;.</p>
             </div>
             <div className="mt-3">
               <button

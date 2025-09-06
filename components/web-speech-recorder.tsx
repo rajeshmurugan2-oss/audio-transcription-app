@@ -132,7 +132,7 @@ export default function WebSpeechRecorder({ onTranscriptionComplete, isLoading }
               Speech Recognition Not Supported
             </h3>
             <div className="mt-2 text-sm text-yellow-700">
-              <p>Your browser doesn't support speech recognition. Please use Chrome, Edge, or Safari for the best experience.</p>
+              <p>Your browser doesn&apos;t support speech recognition. Please use Chrome, Edge, or Safari for the best experience.</p>
             </div>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function WebSpeechRecorder({ onTranscriptionComplete, isLoading }
           Voice Recording (Free)
         </h3>
         <p className="text-sm text-gray-600 mb-4">
-          Uses your browser's built-in speech recognition - completely free!
+          Uses your browser&apos;s built-in speech recognition - completely free!
         </p>
       </div>
 

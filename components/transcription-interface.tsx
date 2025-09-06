@@ -193,18 +193,18 @@ export default function TranscriptionInterface() {
             
             {inputMethod === 'free' ? (
               <div className="space-y-3 text-sm text-blue-800">
-                <p>• <strong>100% FREE</strong> - Uses your browser's built-in speech recognition</p>
-                <p>• Click "Start Recording" and speak clearly</p>
+                <p>• <strong>100% FREE</strong> - Uses your browser&apos;s built-in speech recognition</p>
+                <p>• Click &quot;Start Recording&quot; and speak clearly</p>
                 <p>• Real-time transcription appears as you speak</p>
-                <p>• Click "Stop Recording" when finished</p>
+                <p>• Click &quot;Stop Recording&quot; when finished</p>
                 <p>• Works best in Chrome, Edge, and Safari</p>
                 <p>• Requires microphone permission</p>
               </div>
             ) : inputMethod === 'record' ? (
               <div className="space-y-3 text-sm text-blue-800">
-                <p>• Click "Start Recording" to begin capturing your voice</p>
+                <p>• Click &quot;Start Recording&quot; to begin capturing your voice</p>
                 <p>• Speak clearly and at a normal pace</p>
-                <p>• Click "Stop Recording" when finished</p>
+                <p>• Click &quot;Stop Recording&quot; when finished</p>
                 <p>• The audio will be automatically transcribed</p>
                 <p>• Only English is supported at this time</p>
               </div>

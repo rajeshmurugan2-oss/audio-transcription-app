@@ -38,7 +38,7 @@ export default function AudioUpload({ onFileSelect, disabled = false }: AudioUpl
     setError(null)
     setSelectedFile(file)
     onFileSelect(file)
-  }, [onFileSelect])
+  }, [onFileSelect, validateFile])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
