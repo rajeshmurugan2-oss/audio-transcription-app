@@ -16,19 +16,19 @@ export default function AudioUpload({ onFileSelect, disabled = false }: AudioUpl
   const acceptedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/m4a', 'audio/webm', 'audio/ogg']
   const maxSize = 25 * 1024 * 1024 // 25MB
 
-  const validateFile = (file: File): string | null => {
-    if (!acceptedTypes.includes(file.type)) {
-      return 'Please select a valid audio file (MP3, WAV, M4A, MP4, WebM, OGG)'
-    }
-    
-    if (file.size > maxSize) {
-      return 'File size must be less than 25MB'
-    }
-    
-    return null
-  }
-
   const handleFileSelect = useCallback((file: File) => {
+    const validateFile = (file: File): string | null => {
+      if (!acceptedTypes.includes(file.type)) {
+        return 'Please select a valid audio file (MP3, WAV, M4A, MP4, WebM, OGG)'
+      }
+      
+      if (file.size > maxSize) {
+        return 'File size must be less than 25MB'
+      }
+      
+      return null
+    }
+
     const validationError = validateFile(file)
     if (validationError) {
       setError(validationError)
@@ -38,7 +38,7 @@ export default function AudioUpload({ onFileSelect, disabled = false }: AudioUpl
     setError(null)
     setSelectedFile(file)
     onFileSelect(file)
-  }, [onFileSelect, validateFile])
+  }, [onFileSelect])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
