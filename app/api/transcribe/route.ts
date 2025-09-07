@@ -1,32 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import { config, debugConfig } from '../../lib/config'
 
-// Debug environment variables - enhanced version
-console.log('Environment check:')
-console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY)
-console.log('OPENAI_API_KEY length:', process.env.OPENAI_API_KEY?.length || 0)
-console.log('OPENAI_API_KEY starts with sk-:', process.env.OPENAI_API_KEY?.startsWith('sk-') || false)
+// Debug configuration
+const debugInfo = debugConfig()
+console.log('Configuration loaded:', debugInfo)
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY is not set in environment variables')
+// Initialize OpenAI only if API key exists
+let openai: any = null
+try {
+  if (config.openai.apiKey) {
+    const OpenAI = require('openai').default
+    openai = new OpenAI({
+      apiKey: config.openai.apiKey,
+    })
+    console.log('OpenAI client initialized successfully')
+  }
+} catch (error) {
+  console.error('Failed to initialize OpenAI client:', error)
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+export async function GET() {
+  return NextResponse.json({
+    message: 'Transcribe API is working',
+    timestamp: new Date().toISOString(),
+    config: debugInfo,
+    openaiInitialized: !!openai,
+    environment: process.env.NODE_ENV
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
     console.log('Transcription request received')
     
     // Check if OpenAI API key is available first
-    if (!process.env.OPENAI_API_KEY) {
+    if (!config.openai.apiKey) {
       console.error('OpenAI API key not configured')
       return NextResponse.json(
         { 
           error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to environment variables.',
           details: 'This feature requires an OpenAI API key to work.',
-          status: 'configuration_error'
+          debug: debugInfo
+        },
+        { status: 500 }
+      )
+    }
+
+    // Check if OpenAI client is initialized
+    if (!openai) {
+      console.error('OpenAI client not initialized')
+      return NextResponse.json(
+        { 
+          error: 'OpenAI client initialization failed.',
+          details: 'Failed to initialize OpenAI client. Check your API key.',
+          debug: debugInfo
         },
         { status: 500 }
       )
