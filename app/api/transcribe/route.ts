@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-// Debug environment variables
+// Debug environment variables - enhanced version
 console.log('Environment check:')
 console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY)
 console.log('OPENAI_API_KEY length:', process.env.OPENAI_API_KEY?.length || 0)
