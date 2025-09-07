@@ -19,6 +19,19 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Transcription request received')
     
+    // Check if OpenAI API key is available first
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key not configured')
+      return NextResponse.json(
+        { 
+          error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to environment variables.',
+          details: 'This feature requires an OpenAI API key to work.',
+          status: 'configuration_error'
+        },
+        { status: 500 }
+      )
+    }
+
     // For demo mode, skip authentication check
     console.log('Processing transcription request in demo mode')
 
@@ -104,10 +117,18 @@ export async function POST(request: NextRequest) {
           error: 'File is too large. Please upload a file smaller than 25MB.' 
         }, { status: 400 })
       }
+
+      if (error.message.includes('Rate limit')) {
+        return NextResponse.json({ 
+          error: 'Rate limit exceeded. Please try again later or use the free voice recognition feature.',
+          details: 'OpenAI API rate limit reached. Consider using the "Free Voice" tab for unlimited usage.'
+        }, { status: 429 })
+      }
     }
 
     return NextResponse.json({ 
-      error: 'Failed to transcribe audio. Please try again.' 
+      error: 'Failed to transcribe audio. Please try again.',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }
