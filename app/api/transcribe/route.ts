@@ -1,17 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { config, debugConfig } from '../../lib/config'
 
-// Debug configuration
-const debugInfo = debugConfig()
-console.log('Configuration loaded:', debugInfo)
+// Debug environment variables
+console.log('Environment check:')
+console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY)
+console.log('OPENAI_API_KEY length:', process.env.OPENAI_API_KEY?.length || 0)
+console.log('OPENAI_API_KEY starts with sk-:', process.env.OPENAI_API_KEY?.startsWith('sk-') || false)
+console.log('All env vars:', Object.keys(process.env).filter(key => key.includes('OPENAI')))
+
+// Try multiple ways to get the API key
+const apiKey = process.env.OPENAI_API_KEY || 
+               process.env.NEXT_PUBLIC_OPENAI_API_KEY || 
+               process.env.OPENAI_KEY
+
+console.log('Final API key found:', !!apiKey)
+console.log('API key length:', apiKey?.length || 0)
+
+// Debug info for responses
+const debugInfo = {
+  hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+  hasPublicKey: !!process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  hasOpenAIKeyAlt: !!process.env.OPENAI_KEY,
+  allEnvVars: Object.keys(process.env).filter(key => key.includes('OPENAI'))
+}
 
 // Initialize OpenAI only if API key exists
 let openai: any = null
 try {
-  if (config.openai.apiKey) {
+  if (apiKey) {
     const OpenAI = require('openai').default
     openai = new OpenAI({
-      apiKey: config.openai.apiKey,
+      apiKey: apiKey,
     })
     console.log('OpenAI client initialized successfully')
   }
@@ -34,7 +52,7 @@ export async function POST(request: NextRequest) {
     console.log('Transcription request received')
     
     // Check if OpenAI API key is available first
-    if (!config.openai.apiKey) {
+    if (!apiKey) {
       console.error('OpenAI API key not configured')
       return NextResponse.json(
         { 
