@@ -12,8 +12,7 @@
 1. Create a new repository on GitHub
 2. Push your code:
 ```bash
-git init
-git add .
+git ingit add .
 git commit -m "Initial commit - Audio Transcription App"
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
