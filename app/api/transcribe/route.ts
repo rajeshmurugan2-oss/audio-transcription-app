@@ -89,14 +89,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No audio file provided' }, { status: 400 })
     }
 
-    console.log(`Audio file received: ${audioFile.name}, size: ${audioFile.size} bytes`)
+    console.log(`Audio file received: ${audioFile.name}, size: ${audioFile.size} bytes, type: ${audioFile.type}`)
 
-    // Validate file type
-    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/m4a', 'audio/webm', 'audio/ogg']
-    if (!allowedTypes.includes(audioFile.type)) {
+    // Validate file type - more permissive for better compatibility
+    const allowedTypes = [
+      'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/wav', 'audio/wave', 
+      'audio/m4a', 'audio/m4p', 'audio/webm', 'audio/ogg', 'audio/oga',
+      'audio/x-m4a', 'audio/x-wav', 'audio/x-mpeg', 'audio/x-mp3'
+    ]
+    
+    // Check if file type is allowed or if it's a generic audio type
+    const isValidType = allowedTypes.includes(audioFile.type) || 
+                       audioFile.type.startsWith('audio/') ||
+                       audioFile.name.toLowerCase().match(/\.(mp3|wav|m4a|mp4|webm|ogg)$/)
+    
+    if (!isValidType) {
       console.log(`Invalid file type: ${audioFile.type}`)
       return NextResponse.json({ 
-        error: 'Invalid file type. Please upload MP3, WAV, M4A, MP4, WebM, or OGG files.' 
+        error: 'Invalid file type. Please upload MP3, WAV, M4A, MP4, WebM, or OGG files.',
+        details: `Received type: ${audioFile.type}`
       }, { status: 400 })
     }
 
@@ -111,72 +122,86 @@ export async function POST(request: NextRequest) {
 
     console.log('Starting OpenAI transcription...')
 
-    // Convert File to Buffer for OpenAI API
-    const arrayBuffer = await audioFile.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    try {
+      // Convert File to Buffer for OpenAI API
+      const arrayBuffer = await audioFile.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
 
-    // Create a File-like object for OpenAI using Blob
-    const audioBlob = new Blob([buffer], { type: audioFile.type })
-    
-    // Add name property to the blob for OpenAI API
-    Object.defineProperty(audioBlob, 'name', {
-      value: audioFile.name,
-      writable: false
-    })
+      // Create a File-like object for OpenAI using Blob
+      const audioBlob = new Blob([buffer], { type: audioFile.type })
+      
+      // Add name property to the blob for OpenAI API
+      Object.defineProperty(audioBlob, 'name', {
+        value: audioFile.name,
+        writable: false
+      })
 
-    // Transcribe using OpenAI Whisper API
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioBlob,
-      model: 'whisper-1',
-      language: 'en', // English only for now
-      response_format: 'verbose_json', // Get additional metadata
-    })
+      console.log(`Sending to OpenAI: ${audioFile.name}, size: ${buffer.length} bytes, type: ${audioFile.type}`)
 
-    console.log('Transcription completed successfully')
+      // Transcribe using OpenAI Whisper API
+      const transcription = await openai.audio.transcriptions.create({
+        file: audioBlob,
+        model: 'whisper-1',
+        language: 'en', // English only for now
+        response_format: 'verbose_json', // Get additional metadata
+      })
 
-    // Calculate word count
-    const wordCount = transcription.text.split(/\s+/).filter(word => word.length > 0).length
+      console.log('Transcription completed successfully')
+      console.log('Transcription result:', transcription.text)
 
-    // Prepare response
-    const result = {
-      text: transcription.text,
-      language: transcription.language || 'en',
-      duration: transcription.duration || 0,
-      wordCount: wordCount,
-      fileName: audioFile.name,
-      fileSize: audioFile.size,
-      timestamp: new Date().toISOString()
+      // Calculate word count
+      const wordCount = transcription.text.split(/\s+/).filter(word => word.length > 0).length
+
+      // Prepare response
+      const result = {
+        text: transcription.text,
+        language: transcription.language || 'en',
+        duration: transcription.duration || 0,
+        wordCount: wordCount,
+        fileName: audioFile.name,
+        fileSize: audioFile.size,
+        timestamp: new Date().toISOString()
+      }
+
+      console.log(`Transcription result: ${wordCount} words, ${result.duration}s duration`)
+
+      return NextResponse.json(result)
+
+    } catch (openaiError) {
+      console.error('OpenAI API error:', openaiError)
+      
+      // Handle specific OpenAI errors
+      if (openaiError instanceof Error) {
+        if (openaiError.message.includes('Invalid file format')) {
+          return NextResponse.json({ 
+            error: 'Invalid audio file format. Please try a different file.',
+            details: 'The file format is not supported by OpenAI Whisper API.'
+          }, { status: 400 })
+        }
+        
+        if (openaiError.message.includes('File size')) {
+          return NextResponse.json({ 
+            error: 'File is too large. Please upload a file smaller than 25MB.' 
+          }, { status: 400 })
+        }
+
+        if (openaiError.message.includes('Rate limit')) {
+          return NextResponse.json({ 
+            error: 'Rate limit exceeded. Please try again later or use the free voice recognition feature.',
+            details: 'OpenAI API rate limit reached. Consider using the "Free Voice" tab for unlimited usage.'
+          }, { status: 429 })
+        }
+      }
+
+      return NextResponse.json({ 
+        error: 'Failed to transcribe audio. Please try again.',
+        details: openaiError instanceof Error ? openaiError.message : 'Unknown error'
+      }, { status: 500 })
     }
-
-    console.log(`Transcription result: ${wordCount} words, ${result.duration}s duration`)
-
-    return NextResponse.json(result)
 
   } catch (error) {
     console.error('Transcription error:', error)
     
-    // Handle specific OpenAI errors
-    if (error instanceof Error) {
-      if (error.message.includes('Invalid file format')) {
-        return NextResponse.json({ 
-          error: 'Invalid audio file format. Please try a different file.' 
-        }, { status: 400 })
-      }
-      
-      if (error.message.includes('File size')) {
-        return NextResponse.json({ 
-          error: 'File is too large. Please upload a file smaller than 25MB.' 
-        }, { status: 400 })
-      }
-
-      if (error.message.includes('Rate limit')) {
-        return NextResponse.json({ 
-          error: 'Rate limit exceeded. Please try again later or use the free voice recognition feature.',
-          details: 'OpenAI API rate limit reached. Consider using the "Free Voice" tab for unlimited usage.'
-        }, { status: 429 })
-      }
-    }
-
     return NextResponse.json({ 
       error: 'Failed to transcribe audio. Please try again.',
       details: error instanceof Error ? error.message : 'Unknown error'
