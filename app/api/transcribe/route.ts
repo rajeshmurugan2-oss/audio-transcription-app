@@ -115,8 +115,14 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await audioFile.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Create a File-like object for OpenAI
-    const audioBlob = new File([buffer], audioFile.name, { type: audioFile.type })
+    // Create a File-like object for OpenAI using Blob
+    const audioBlob = new Blob([buffer], { type: audioFile.type })
+    
+    // Add name property to the blob for OpenAI API
+    Object.defineProperty(audioBlob, 'name', {
+      value: audioFile.name,
+      writable: false
+    })
 
     // Transcribe using OpenAI Whisper API
     const transcription = await openai.audio.transcriptions.create({
